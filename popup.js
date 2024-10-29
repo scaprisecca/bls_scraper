@@ -51,27 +51,36 @@ function extractTableData() {
     throw new Error('No suitable table found on the page');
   }
 
-  // Extract headers
-  const headers = [];
+  // Extract column headers
+  const columnHeaders = [];
   const headerRows = table.querySelectorAll('thead tr');
   headerRows.forEach(row => {
     const cells = row.querySelectorAll('th');
-    cells.forEach(cell => headers.push(cell.textContent.trim()));
+    cells.forEach(cell => columnHeaders.push(cell.textContent.trim()));
   });
 
-  // Extract data rows
+  // Extract data rows including row headers
   const rows = [];
   const dataRows = table.querySelectorAll('tbody tr');
   dataRows.forEach(row => {
     const rowData = [];
-    const cells = row.querySelectorAll('td');
-    cells.forEach(cell => rowData.push(cell.textContent.trim()));
-    rows.push(rowData);
+    
+    // Get all cells (both th and td) in the row
+    const cells = row.querySelectorAll('th, td');
+    cells.forEach(cell => {
+      // Clean the cell text - remove extra whitespace and any commas
+      const cellText = cell.textContent.trim().replace(/,/g, ' ');
+      rowData.push(cellText);
+    });
+    
+    if (rowData.length > 0) {  // Only add non-empty rows
+      rows.push(rowData);
+    }
   });
 
   // Convert to CSV
   const csvRows = [
-    headers.join(','),
+    columnHeaders.join(','),
     ...rows.map(row => row.join(','))
   ];
   const csvContent = csvRows.join('\n');
